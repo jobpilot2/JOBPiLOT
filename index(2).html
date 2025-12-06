@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>JobPilot — Modernized Prototype</title>
+<style>
+  /* ---------- THEME & BASE ---------- */
+  :root{
+    --bg:#0b0f14;
+    --panel:rgba(255,255,255,0.03);
+    --muted:rgba(255,255,255,0.65);
+    --white:#e9eef6;
+    --glass:rgba(255,255,255,0.04);
+    --accent:#6ae3b5;
+    --accent-2:#6fa8ff;
+    --danger:#ff6b6b;
+    --card-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    --soft-shadow: 0 6px 20px rgba(2,6,23,0.5);
+    --glass-border: rgba(255,255,255,0.06);
+    --radius:12px;
+    --maxWidth:1100px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1000px 400px at 10% 10%, rgba(75,90,255,0.06), transparent), linear-gradient(180deg,#071018 0%, var(--bg) 100%);
+    color:var(--white); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    -webkit-tap-highlight-color: transparent;
+    display:flex; justify-content:center; padding:28px;
+  }
+  .app{
+    width:100%; max-width:var(--maxWidth);
+    display:flex; flex-direction:column; gap:18px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:18px; padding:14px 18px;
+    border-radius:16px; backdrop-filter: blur(8px) saturate(120%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid var(--glass-border);
+    box-shadow: var(--soft-shadow);
+  }
+  #leftHeader{ display:flex; align-items:center; gap:14px; }
+  #logo{ height:48px; width:auto; border-radius:10px; object-fit:contain; box-shadow: 0 6px 18px rgba(0,0,0,0.6); }
+
+  /* search */
+  .searchWrap{ display:flex; align-items:center; gap:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); padding:6px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); }
+  #searchBar{ width:360px; max-width:56vw; padding:10px 12px; border-radius:10px; border:0; outline:none; background:transparent; color:var(--white); font-weight:600; }
+  #searchBar::placeholder{ color: rgba(255,255,255,0.45); font-weight:500; }
+
+  /* auth */
+  #authArea{ display:flex; gap:10px; align-items:center; }
+  .btn{ padding:10px 12px; border-radius:10px; border:0; cursor:pointer; font-weight:700; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#032; box-shadow:0 8px 20px rgba(107,179,216,0.08); }
+  .btn.ghost{ background:transparent; color:var(--white); border:1px solid rgba(255,255,255,0.04); }
+
+  /* ---------- NAV ---------- */
+  nav{ display:flex; gap:8px; align-items:center; padding:8px; }
+  nav button{ background:transparent; color:var(--muted); border:0; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer; transition:all .18s; }
+  nav button:hover{ transform:translateY(-3px); color:var(--white); background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent); }
+  nav button.active{ color:var(--white); background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
+
+  /* ---------- LAYOUT ---------- */
+  main{ display:flex; gap:22px; align-items:flex-start; }
+  .col-left{ width:100%; max-width:720px; }
+  .col-right{ width:360px; min-width:260px; }
+
+  /* ---------- SECTIONS ---------- */
+  section{ display:none; animation:fadeIn .26s ease both; }
+  section.active{ display:block; }
+
+  /* ---------- CARDS ---------- */
+  .company-card{ padding:16px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border-radius:var(--radius); margin-bottom:12px; border:1px solid var(--glass-border); transition: transform .22s cubic-bezier(.2,.9,.2,1), box-shadow .22s; display:flex; gap:12px; align-items:flex-start; }
+  .company-card:hover{ transform:translateY(-8px) scale(1.01); box-shadow: var(--card-shadow); }
+  .card-media{ width:74px; height:74px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .card-media img{ width:100%; height:100%; object-fit:cover; }
+  .card-body{ flex:1; }
+  .company-card h4{ margin:0 0 6px 0; font-size:16px; }
+  .company-card p{ margin:0; color:var(--muted); font-size:14px; line-height:1.35; }
+
+  .like-btn{ font-size:20px; cursor:pointer; color:var(--muted); user-select:none; padding:8px; border-radius:8px; transition:transform .12s, color .14s; }
+  .like-btn:hover{ transform:translateY(-3px); }
+  .like-btn.liked{ color:var(--accent); text-shadow:0 6px 24px rgba(106,227,181,0.08); }
+
+  /* small helper */
+  .muted{ color:var(--muted); }
+  .tiny{ font-size:13px; color:var(--muted); }
+
+  /* admin box */
+  #adminPanel{ padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+
+  /* modal */
+  #modalOverlay{ display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; }
+  #modalOverlay.show{ display:flex; }
+  #modalOverlay::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(2,6,23,0.7), rgba(2,6,23,0.6)); backdrop-filter: blur(8px) saturate(120%); }
+  #modal{ position:relative; width:92%; max-width:920px; padding:22px; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid var(--glass-border); box-shadow:var(--card-shadow); max-height:86vh; overflow:auto; }
+  #modal h2, #modal h3{ margin:0 0 10px 0; }
+  .modal-row{ display:flex; gap:12px; }
+  .modal-media{ width:180px; height:120px; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.01); display:flex; align-items:center; justify-content:center; }
+  .modal-media img{ width:100%; height:100%; object-fit:cover; }
+  .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+
+  /* toast */
+  #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:28px; background:rgba(10,12,18,0.9); color:var(--white); padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:none; z-index:10001; }
+
+  /* responsive */
+  @media (max-width:980px){
+    main{ flex-direction:column; }
+    .col-right{ width:100%; order:2; }
+    .col-left{ order:1; }
+    #searchBar{ width:48vw; }
+  }
+
+  /* animations */
+  @keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  .fade-up{ animation:fadeIn .26s ease both; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div id="leftHeader">
+        <img id="logo" src="logo.png" alt="Logo" onerror="this.style.display='none'" />
+        <div class="searchWrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:.9"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <input id="searchBar" placeholder="Firma suchen (Praktikum, Ausbildung, etc.)" />
+        </div>
+      </div>
+
+      <div id="authArea">
+        <button class="btn ghost" id="showLoginBtn">Login / Registrierung</button>
+      </div>
+    </header>
+
+    <nav id="mainNav">
+      <button onclick="openTab('start')" class="active">Start</button>
+      <button onclick="openTab('ausbildung')">Ausbildung</button>
+      <button onclick="openTab('schueler')">Schülerjob</button>
+      <button onclick="openTab('ferien')">Ferienjob</button>
+      <button onclick="openTab('minijob')">Minijob</button>
+      <button onclick="openTab('praktikum')">Praktikum</button>
+      <button onclick="openTab('voting')">Voting</button>
+      <button onclick="openTab('likes')">Meine Likes</button>
+    </nav>
+
+    <main>
+      <div class="col-left">
+        <section id="start" class="active">
+          <h1 style="margin:0 0 6px 0">JobPilot</h1>
+          <p class="muted">Schnell Praktika und Jobs finden — melde dich an, like Firmen und nimm an Abstimmungen teil.</p>
+          <div id="listArea" style="margin-top:16px"></div>
+        </section>
+
+        <section id="praktikum"><h2>Praktikum</h2><div id="praktikumList"></div></section>
+        <section id="ausbildung"><h2>Ausbildung</h2><div id="ausbildungList"></div></section>
+        <section id="schueler"><h2>Schülerjob</h2><div id="schuelerList"></div></section>
+        <section id="ferien"><h2>Ferienjob</h2><div id="ferienList"></div></section>
+        <section id="minijob"><h2>Minijob</h2><div id="minijobList"></div></section>
+
+        <section id="voting"><h2>Voting</h2><div id="votingArea" class="muted">Bitte einloggen, um teilnehmen zu können.</div></section>
+
+        <section id="likes"><h2>Meine gelikten Firmen</h2><div id="likedList" class="muted">Bitte einloggen.</div></section>
+
+        <section id="admin"><h2>Admin-Bereich</h2><div id="adminPanel" class="muted">Bitte Admin einloggen, um Inhalte zu verwalten.</div></section>
+      </div>
+
+      <aside class="col-right">
+        <div id="loginBoxWrap" style="display:none; margin-bottom:12px;">
+          <div style="padding:12px; border-radius:12px; border:1px solid var(--glass-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);">
+            <h3 style="margin:0 0 8px 0">Einloggen / Registrieren</h3>
+            <label class="tiny">Email</label>
+            <input id="emailInput" type="email" placeholder="name@domain.de" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--white);" />
+            <label class="tiny">Passwort</label>
+            <input id="passwordInput" type="password" placeholder="Passwort" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--white);" />
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <button class="btn" onclick="login()">Einloggen</button>
+              <button class="btn ghost" onclick="register()">Registrieren</button>
+            </div>
+            <p class="tiny" style="margin-top:8px"></p>
+          </div>
+        </div>
+
+        <div id="adminQuick" style="display:none; margin-bottom:12px;">
+          <div id="adminPanelSmall" style="padding:12px; border-radius:10px; border:1px solid var(--glass-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);">
+            <strong>Admin-Tools</strong>
+            <div style="margin-top:10px; display:flex; gap:8px;">
+              <button class="btn" onclick="showAddCompany()">+ Firma hinzufügen</button>
+              <button class="btn ghost" onclick="showAddVoting()">+ Voting</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:12px; border-radius:10px; border:1px solid var(--glass-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);">
+          <h4 style="margin:0 0 6px 0">Kurzinfo</h4>
+          <p class="muted" style="margin:0 0 8px 0">Suche schnell Praktika und Jobs. Melde dich an, like Firmen und nimm an Abstimmungen teil.</p>
+          <p class="tiny"></p>
+        </div>
+      </aside>
+    </main>
+
+    <div id="visitorCounter" class="tiny" style="text-align:right; margin-top:6px"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modalOverlay" role="dialog" aria-hidden="true">
+    <div id="modal" aria-modal="true">
+      <div id="modalInner"></div>
+      <div class="modal-actions"><button onclick="closeModal()" class="btn ghost">Schließen</button></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+/* =========================================================
+   Daten + Konstanten (wie vorher)
+   ========================================================= */
+const ADMIN_EMAIL = "admin@jobpilot.de";
+const ADMIN_PASS  = "Admin123";
+let currentUser = null;
+let companies = [];
+let votings = [];
+
+function uid(prefix='id'){ return prefix + Math.random().toString(36).slice(2,10); }
+function saveAll(){ localStorage.setItem('jp_companies', JSON.stringify(companies)); localStorage.setItem('jp_votings', JSON.stringify(votings)); }
+function loadAll(){ companies = JSON.parse(localStorage.getItem('jp_companies')||'[]'); votings = JSON.parse(localStorage.getItem('jp_votings')||'[]'); }
+function showToast(msg, timeout=2600){ const t = document.getElementById('toast'); t.innerText = msg; t.style.display='block'; t.style.opacity='1'; clearTimeout(t._to); t._to = setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.style.display='none',220); }, timeout); }
+
+/* ---------- Demo data ---------- */
+function ensureDemo(){
+  if(!localStorage.getItem('jp_demo_initialized')){
+    companies = [
+      { id:uid('c'), name:"Beispiel GmbH", category:"praktikum", short:"Kurze Firmenbeschreibung", details:"Beispiel GmbH – Wir sind ein junges Team...", image:'', likes:0, createdAt:Date.now() }
+    ];
+    votings = [ { id:uid('v'), title:"Soll JobPilot ein Forum bekommen?", options:[{id:uid('o'),text:"Ja",votes:3},{id:uid('o'),text:"Nein",votes:1}], createdAt:Date.now() } ];
+    localStorage.setItem('jp_demo_initialized','1');
+    saveAll();
+  }
+}
+
+/* =========================================================
+   Rendering
+   ========================================================= */
+const listArea = document.getElementById('listArea');
+function renderAll(){
+  loadAll();
+  // clear
+  ['praktikum','ausbildung','schueler','ferien','minijob'].forEach(id=>{ const el=document.getElementById(id+'List'); if(el) el.innerHTML=''; });
+  listArea.innerHTML='';
+
+  companies.forEach(c=>{
+    const card = makeCompanyCard(c);
+    listArea.appendChild(card);
+    const catbox = document.getElementById((c.category||'praktikum')+'List');
+    if(catbox) catbox.appendChild(makeCompanyCard(c));
+  });
+
+  renderVotings();
+  renderLiked();
+  renderAdmin();
+}
+
+function makeCompanyCard(c){
+  const card = document.createElement('div'); card.className='company-card fade-up';
+  card.dataset.id = c.id;
+
+  const media = document.createElement('div'); media.className='card-media';
+  if(c.image){ const img = document.createElement('img'); img.src = c.image; media.appendChild(img); }
+  else{ media.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M3 7h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M3 12h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M3 17h18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'; }
+
+  const body = document.createElement('div'); body.className='card-body';
+  const title = document.createElement('h4'); title.innerText = c.name;
+  const p = document.createElement('p'); p.className='muted'; p.innerText = c.short||'';
+  body.appendChild(title); body.appendChild(p);
+
+  const like = document.createElement('div'); like.className='like-btn'; like.innerText = userHasLiked(c.id)?'♥':'♡'; if(userHasLiked(c.id)) like.classList.add('liked');
+
+  card.appendChild(media); card.appendChild(body); card.appendChild(like);
+
+  // events
+  card.onclick = (ev)=>{ if(ev.target===like) return; openCompanyModal(c.id); };
+  like.onclick = (ev)=>{ ev.stopPropagation(); if(!currentUser){ showLogin(); return; } toggleLike(c.id); renderAll(); };
+  return card;
+}
+
+/* ---------- Modal (improved overlay) ---------- */
+function showModal(){ const o = document.getElementById('modalOverlay'); o.classList.add('show'); o.setAttribute('aria-hidden','false'); }
+function closeModal(){ const o = document.getElementById('modalOverlay'); o.classList.remove('show'); o.setAttribute('aria-hidden','true'); }
+
+/* ---------- Company details modal (single rich field "details") ---------- */
+function openCompanyModal(id){ const c = companies.find(x=>x.id===id); if(!c) return; const modalInner = document.getElementById('modalInner');
+  let html = `<h2>${escapeHtml(c.name)}</h2><p class="tiny">Kategorie: ${escapeHtml(c.category)}</p><hr/>`;
+  if(c.image) html += `<div class="modal-row"><div class="modal-media"><img src="${c.image}" alt="${escapeHtml(c.name)}"/></div><div style="flex:1"><p class="muted">${escapeHtml(c.short||'')}</p></div></div><hr/>`;
+  html += `<p style="white-space:pre-line;">${escapeHtml(c.details||'Keine weiteren Details')}</p>`;
+  html += '<div class="modal-actions"><button onclick="closeModal()" class="btn ghost">Schließen</button>';
+  if(currentUser && currentUser.admin){ html += `<button onclick="editCompany('${c.id}')" class="btn">Bearbeiten</button><button onclick="deleteCompany('${c.id}')" style="background:var(--danger); color:#fff; border-radius:10px; padding:10px; border:0; cursor:pointer">Löschen</button>`; }
+  html += '</div>';
+  modalInner.innerHTML = html; showModal(); }
+
+/* ---------- Admin: add/edit company (with image & details) ---------- */
+function showAddCompany(){ if(!currentUser || !currentUser.admin){ showToast('Nur Admins können Firmen hinzufügen.'); return; }
+  const formId = uid('form'); const modalInner = document.getElementById('modalInner');
+  let html = `<h3>Firma hinzufügen</h3>
+    <label class="tiny">Firmenname</label><input id="${formId}_name" />
+    <label class="tiny">Kategorie</label>
+    <select id="${formId}_category">
+      <option value="praktikum">Praktikum</option>
+      <option value="ausbildung">Ausbildung</option>
+      <option value="schueler">Schülerjob</option>
+      <option value="ferien">Ferienjob</option>
+      <option value="minijob">Minijob</option>
+    </select>
+    <label class="tiny">Kurze Beschreibung</label><input id="${formId}_short" />
+    <label class="tiny">Details</label><textarea id="${formId}_details" placeholder="Hier die ausführliche Beschreibung..." style="min-height:120px"></textarea>
+    <label class="tiny">Bild hochladen</label><input id="${formId}_image" type="file" accept="image/*" />
+    <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;"><button class="btn" onclick="saveNewCompany('${formId}')">Speichern</button> <button class="btn ghost" onclick="closeModal()">Abbrechen</button></div>`;
+  modalInner.innerHTML = html; showModal(); }
+
+function saveNewCompany(formId){
+  const name = document.getElementById(formId+'_name').value.trim(); if(!name){ alert('Name ist erforderlich'); return; }
+  const category = document.getElementById(formId+'_category').value; const short = document.getElementById(formId+'_short').value; const details = document.getElementById(formId+'_details').value;
+  const imgInput = document.getElementById(formId+'_image');
+  if(imgInput && imgInput.files && imgInput.files[0]){
+    const reader = new FileReader(); reader.onload = function(e){ const obj = { id:uid('c'), name, category, short, details, image:e.target.result, likes:0, createdAt:Date.now() }; companies.push(obj); saveAll(); closeModal(); renderAll(); showToast('Firma hinzugefügt'); };
+    reader.readAsDataURL(imgInput.files[0]);
+  } else {
+    const obj = { id:uid('c'), name, category, short, details, image:'', likes:0, createdAt:Date.now() };
+    companies.push(obj); saveAll(); closeModal(); renderAll(); showToast('Firma hinzugefügt');
+  }
+}
+
+function editCompany(id){ const c = companies.find(x=>x.id===id); if(!c) return; const formId = uid('ef'); const modalInner = document.getElementById('modalInner');
+  let html = `<h3>Firma bearbeiten</h3>
+    <label class="tiny">Firmenname</label><input id="${formId}_name" value="${escapeHtml(c.name)}" />
+    <label class="tiny">Kategorie</label>
+    <select id="${formId}_category">
+      <option ${c.category==='praktikum'?'selected':''} value="praktikum">Praktikum</option>
+      <option ${c.category==='ausbildung'?'selected':''} value="ausbildung">Ausbildung</option>
+      <option ${c.category==='schueler'?'selected':''} value="schueler">Schülerjob</option>
+      <option ${c.category==='ferien'?'selected':''} value="ferien">Ferienjob</option>
+      <option ${c.category==='minijob'?'selected':''} value="minijob">Minijob</option>
+    </select>
+    <label class="tiny">Kurze Beschreibung</label><input id="${formId}_short" value="${escapeHtml(c.short||'')}" />
+    <label class="tiny">Details</label><textarea id="${formId}_details" style="min-height:120px">${escapeHtml(c.details||'')}</textarea>
+    <label class="tiny">Bild hochladen (überschreibt vorhandenes)</label><input id="${formId}_image" type="file" accept="image/*" />
+    <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end"><button class="btn" onclick="saveEditedCompany('${id}','${formId}')">Speichern</button> <button class="btn ghost" onclick="closeModal()">Abbrechen</button></div>`;
+  modalInner.innerHTML = html; showModal(); }
+
+function saveEditedCompany(id, formId){ const c = companies.find(x=>x.id===id); if(!c) return; c.name = document.getElementById(formId+'_name').value; c.category = document.getElementById(formId+'_category').value; c.short = document.getElementById(formId+'_short').value; c.details = document.getElementById(formId+'_details').value;
+  const imgInput = document.getElementById(formId+'_image'); if(imgInput && imgInput.files && imgInput.files[0]){ const reader = new FileReader(); reader.onload = function(e){ c.image = e.target.result; saveAll(); closeModal(); renderAll(); showToast('Firma gespeichert'); }; reader.readAsDataURL(imgInput.files[0]); } else { saveAll(); closeModal(); renderAll(); showToast('Firma gespeichert'); } }
+
+function deleteCompany(id){ if(!confirm('Firma wirklich löschen?')) return; companies = companies.filter(x=>x.id!==id); saveAll(); closeModal(); renderAll(); showToast('Firma gelöscht'); }
+
+/* ---------- Likes (gleiches Verhalten) ---------- */
+function userHasLiked(companyId){ if(!currentUser) return false; const likes = JSON.parse(localStorage.getItem('jp_likes_'+currentUser.email) || '[]'); return likes.includes(companyId); }
+function toggleLike(companyId){ if(!currentUser){ showLogin(); return; } const key = 'jp_likes_'+currentUser.email; const likes = JSON.parse(localStorage.getItem(key) || '[]'); if(likes.includes(companyId)){ const idx = likes.indexOf(companyId); likes.splice(idx,1); } else likes.push(companyId); localStorage.setItem(key, JSON.stringify(likes)); renderLiked(); }
+
+function renderLiked(){ const target = document.getElementById('likedList'); if(!currentUser){ target.innerHTML = '<div class="muted">Bitte einloggen, um Ihre gelikten Firmen zu sehen.</div>'; return; } const likes = JSON.parse(localStorage.getItem('jp_likes_'+currentUser.email) || '[]'); if(!likes.length){ target.innerHTML = '<div class="muted">Du hast noch keine Firmen gelikt.</div>'; return; } target.innerHTML=''; likes.forEach(id=>{ const c = companies.find(x=>x.id===id); if(!c) return; const div = document.createElement('div'); div.className='company-card'; div.innerHTML = `<div style="flex:1"><h4>${escapeHtml(c.name)}</h4><p class="muted">${escapeHtml(c.short||'')}</p></div><div><button class="btn" onclick="openCompanyModal('${c.id}')">Details</button></div>`; target.appendChild(div); }); }
+
+/* ---------- Voting (same behavior + prettier) ---------- */
+function vote(voteId, optId){ if(!currentUser){ showLogin(); return; } const v = votings.find(x=>x.id===voteId); if(!v) return; const voteKey = 'jp_votes_' + currentUser.email; const votes = JSON.parse(localStorage.getItem(voteKey) || '{}'); if(votes[voteId]){ showToast('Du hast bereits abgestimmt!'); return; } const opt = v.options.find(o=>o.id===optId); if(!opt) return; opt.votes = (opt.votes||0) + 1; votes[voteId] = optId; localStorage.setItem(voteKey, JSON.stringify(votes)); saveAll(); renderVotings(); showToast('Danke für deine Stimme'); }
+
+function renderVotings(){ const area = document.getElementById('votingArea'); if(!votings.length){ area.innerHTML = '<div class="muted">Keine Abstimmungen vorhanden.</div>'; return; } let html = ''; votings.forEach(v=>{ html += `<div style="padding:12px; border-radius:10px; border:1px solid var(--glass-border); margin-bottom:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)"><h4 style="margin:0 0 6px 0">${escapeHtml(v.title)}</h4><div class="tiny" style="margin-bottom:8px">Erstellt: ${new Date(v.createdAt).toLocaleString()}</div><div>`; const voteKey = currentUser ? 'jp_votes_' + currentUser.email : null; const userVotes = voteKey ? JSON.parse(localStorage.getItem(voteKey)||'{}') : {}; v.options.forEach(opt=>{ const disabled = userVotes[v.id] ? 'disabled' : ''; html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><button ${disabled} onclick="vote('${v.id}','${opt.id}')" style="padding:8px 12px; border-radius:10px; border:0; cursor:pointer">${escapeHtml(opt.text)}</button><div class="muted">${opt.votes} Stimmen</div></div>`; }); html += `</div>`; if(currentUser && currentUser.admin) html += `<div style="margin-top:8px"><button onclick="deleteVoting('${v.id}')" style="background:var(--danger); color:#fff; padding:8px; border-radius:10px; border:0; cursor:pointer">Löschen</button></div>`; html += `</div>`; }); area.innerHTML = html; }
+
+function showAddVoting(){ if(!currentUser || !currentUser.admin){ showToast('Nur Admins.'); return; } const formId = uid('vform'); const modalInner = document.getElementById('modalInner'); modalInner.innerHTML = `\n    <h3>Voting erstellen</h3>\n    <label class="tiny">Titel</label><input id="${formId}_title" />\n    <label class="tiny">Option 1</label><input id="${formId}_o1" />\n    <label class="tiny">Option 2</label><input id="${formId}_o2" />\n    <label class="tiny">Option 3 (optional)</label><input id="${formId}_o3" />\n    <div style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end"><button class="btn" onclick="saveVoting('${formId}')">Speichern</button> <button class="btn ghost" onclick="closeModal()">Abbrechen</button></div>\n  `; showModal(); }
+
+function saveVoting(formId){ const t = document.getElementById(formId + '_title').value.trim(); const o1 = document.getElementById(formId + '_o1').value.trim(); const o2 = document.getElementById(formId + '_o2').value.trim(); const o3 = document.getElementById(formId + '_o3').value.trim(); if(!t || !o1 || !o2){ alert('Titel und mindestens 2 Optionen erforderlich'); return; } const v = { id:uid('v'), title:t, options:[{id:uid('o'),text:o1,votes:0},{id:uid('o'),text:o2,votes:0}], createdAt:Date.now() }; if(o3) v.options.push({id:uid('o'),text:o3,votes:0}); votings.push(v); saveAll(); closeModal(); renderVotings(); showToast('Voting erstellt'); }
+function deleteVoting(id){ if(!confirm('Voting löschen?')) return; votings = votings.filter(x=>x.id!==id); saveAll(); renderVotings(); showToast('Voting gelöscht'); }
+
+/* ---------- Admin render ---------- */
+function renderAdmin(){ const panel = document.getElementById('adminPanel'); if(!currentUser || !currentUser.admin){ panel.innerHTML = '<div class="muted">Bitte als Admin einloggen, um Firmen & Votings zu verwalten.</div>'; document.getElementById('adminQuick').style.display='none'; return; } document.getElementById('adminQuick').style.display='block'; let html = '<div style="display:flex;flex-direction:column;gap:8px">'; html += '<div><strong>Vorhandene Firmen</strong></div>'; companies.forEach(c=>{ html += `<div style="padding:10px; border-radius:8px; margin:6px 0; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--glass-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)"><div><strong>${escapeHtml(c.name)}</strong><div class="muted">${escapeHtml(c.category)}</div></div><div style="display:flex;gap:6px"><button onclick="editCompany('${c.id}')" class="btn ghost">Bearbeiten</button><button onclick="deleteCompany('${c.id}')" style="background:var(--danger); color:#fff; padding:8px; border-radius:8px; border:0; cursor:pointer">Löschen</button></div></div>`; }); html += '<hr/><div><strong>Votings</strong></div>'; votings.forEach(v=>{ html += `<div style="padding:10px; border-radius:8px; margin:6px 0; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--glass-border); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)"><div><strong>${escapeHtml(v.title)}</strong><div class="muted">${v.options.map(o=>escapeHtml(o.text)).join(' • ')}</div></div><div><button onclick="deleteVoting('${v.id}')" style="background:var(--danger); color:#fff; padding:8px; border-radius:8px; border:0; cursor:pointer">Löschen</button></div></div>`; }); html += '</div>'; panel.innerHTML = html; }
+
+/* ---------- Auth (same behaviour but prettier) ---------- */
+function showLogin(){ document.getElementById('loginBoxWrap').style.display='block'; openTab('start'); window.scrollTo({top:0,behavior:'smooth'}); }
+document.getElementById('showLoginBtn').onclick = showLogin;
+
+function register(){ const email = document.getElementById('emailInput').value.trim(); const pw = document.getElementById('passwordInput').value; if(!email||!pw){ alert('Email + Passwort eingeben'); return; } const users = JSON.parse(localStorage.getItem('jp_users')||'[]'); if(users.find(u=>u.email===email)){ alert('Email bereits registriert'); return; } users.push({ email, password: pw, admin:false }); localStorage.setItem('jp_users', JSON.stringify(users)); showToast('Registrierung erfolgreich — bitte einloggen.'); }
+
+function login(){ const email = document.getElementById('emailInput').value.trim(); const pw = document.getElementById('passwordInput').value; if(!email||!pw){ alert('Email + Passwort eingeben'); return; } if(email===ADMIN_EMAIL && pw===ADMIN_PASS){ currentUser = { email, admin:true }; } else { const users = JSON.parse(localStorage.getItem('jp_users')||'[]'); const u = users.find(x=>x.email===email && x.password===pw); if(!u){ alert('Benutzer nicht gefunden oder falsches Passwort'); return; } currentUser = { email:u.email, admin:false }; } document.getElementById('loginBoxWrap').style.display='none'; document.getElementById('authArea').innerHTML = `<div style="display:flex;gap:8px;align-items:center"><div class="tiny">Eingeloggt als ${currentUser.email}${currentUser.admin?' (Admin)':''}</div><button onclick="logout()" class="btn ghost">Logout</button></div>`; if(currentUser.admin) document.getElementById('adminQuick').style.display='block'; renderAll(); showToast('Erfolgreich eingeloggt'); }
+
+function logout(){ currentUser = null; document.getElementById('authArea').innerHTML = `<button class="btn ghost" id="showLoginBtn" onclick="showLogin()">Login / Registrierung</button>`; document.getElementById('adminQuick').style.display='none'; renderAll(); }
+
+/* ---------- Search ---------- */
+document.getElementById('searchBar').addEventListener('input', function(){ const term = this.value.trim().toLowerCase(); document.querySelectorAll('.company-card').forEach(card=>{ const txt = card.innerText.toLowerCase(); card.style.display = txt.includes(term) ? '' : 'none'; }); });
+
+/* ---------- Tabs ---------- */
+function openTab(id){ document.querySelectorAll('main section').forEach(s=>s.classList.remove('active')); document.querySelectorAll('#mainNav button').forEach(b=>b.classList.remove('active')); const el = document.getElementById(id); const btn = Array.from(document.querySelectorAll('#mainNav button')).find(x=>x.textContent.trim().toLowerCase()===id); if(el) el.classList.add('active'); // set active nav (simple heuristic)
+  const navBtn = document.querySelector(`#mainNav button[onclick*="openTab('${id}')"]`); if(navBtn) navBtn.classList.add('active'); }
+
+/* ---------- Besucherzähler: pro Gerät nur einmal ---------- */
+function initVisitorCounter() {
+  if (!localStorage.getItem('jp_visitor_once')) {
+    // Gerät wurde noch nie gezählt
+    let v = parseInt(localStorage.getItem('jp_visitors') || '0', 10);
+    v++;
+    localStorage.setItem('jp_visitors', v);
+
+    // Merken, dass dieses Gerät gezählt wurde
+    localStorage.setItem('jp_visitor_once', '1');
+  }
+
+  // Anzeige setzen
+  document.getElementById('visitorCounter').innerText =
+      'Besucher: ' + (localStorage.getItem('jp_visitors') || '1');
+}
+
+// Aufrufen
+initVisitorCounter();
+
+/* ---------- Utils ---------- */
+function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------- Init ---------- */
+function init(){ ensureDemo(); loadAll(); renderAll(); updateVisitorCounter(); }
+init();
+
+</script>
+</body>
+</html>
